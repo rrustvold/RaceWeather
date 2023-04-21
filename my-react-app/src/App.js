@@ -225,12 +225,36 @@ function RaceWeek() {
         async function fetchDataAsync() {
             const json = await extractWeatherFromLocation("velodrome");
             setVelodrome(json);
+        }
+        fetchDataAsync();
+    }, []);
+
+    useEffect(() => {
+        async function fetchDataAsync() {
             const json2 = await extractWeatherFromLocation("seward");
             setSeward(json2);
+        }
+        fetchDataAsync();
+    }, []);
+
+    useEffect(() => {
+        async function fetchDataAsync() {
             const json3 = await extractWeatherFromLocation("pr");
             setPr(json3);
+        }
+        fetchDataAsync();
+    }, []);
+
+    useEffect(() => {
+        async function fetchDataAsync() {
             const json4 = await extractWeatherFromLocation("seatac");
             setSeatac(json4);
+        }
+        fetchDataAsync();
+    }, []);
+
+    useEffect(() => {
+        async function fetchDataAsync() {
             const json5 = await extractWeatherFromLocation("mi");
             setMi(json5);
         }
