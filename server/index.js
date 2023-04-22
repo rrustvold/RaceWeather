@@ -40,6 +40,10 @@ app.get("/.well-known/acme-challenge/IHpWnDnCHFnZ4aRhKybezG6RVjaamhkqOwZvU7wGb-Y
   res.json("IHpWnDnCHFnZ4aRhKybezG6RVjaamhkqOwZvU7wGb-Y.aD6bmA9MI4S3PSy3LFu6C0Vk4dZYaiZNHWRH6X2sliI");
 });
 
+app.get("/.well-known/acme-challenge/3syGm3HdLHADfONWmFxRz1fZOUnc6h07FIN1I9yFSdg", (req, res) => {
+  res.json("3syGm3HdLHADfONWmFxRz1fZOUnc6h07FIN1I9yFSdg.aD6bmA9MI4S3PSy3LFu6C0Vk4dZYaiZNHWRH6X2sliI");
+})
+
 // All other GET requests not handled before will return our React app
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, '../my-react-app/build', 'index.html'));
