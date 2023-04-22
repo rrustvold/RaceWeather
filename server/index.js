@@ -36,6 +36,10 @@ app.get("/api", (req, res) => {
 
 });
 
+app.get("/.well-known/acme-challenge/IHpWnDnCHFnZ4aRhKybezG6RVjaamhkqOwZvU7wGb-Y", (req, res) => {
+  res.json("IHpWnDnCHFnZ4aRhKybezG6RVjaamhkqOwZvU7wGb-Y.aD6bmA9MI4S3PSy3LFu6C0Vk4dZYaiZNHWRH6X2sliI");
+});
+
 // All other GET requests not handled before will return our React app
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, '../my-react-app/build', 'index.html'));
