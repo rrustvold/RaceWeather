@@ -10,8 +10,17 @@ body {
   height: 100vh;
   background-repeat: no-repeat;
   background-attachment: fixed;
+
+}
+.btn-primary {
+  background-color: #3f5c17;
+  border-color: #8ecb38
 }
 
+.btn-primary:hover, .btn-primary:active, .btn-primary:checked {
+  background-color: #8ecb38;
+  border-color: #8ecb38
+}
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',

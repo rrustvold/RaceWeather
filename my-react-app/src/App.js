@@ -2,10 +2,12 @@ import logo from './logo.svg';
 // import './App.css';
 import React from 'react';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const daysOfWeek = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday"];
 
 async function extractWeatherFromLocation(place) {
+    var name;
     if (place === "velodrome") {
         var lat = "47.665724";
         var lon = "-122.112615";
@@ -26,6 +28,16 @@ async function extractWeatherFromLocation(place) {
         var lat = "47.590201";
         var lon = "-122.247918";
         var days = [2];
+    } else if (place === "custom"){
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+          get: (searchParams, prop) => searchParams.get(prop),
+        });
+        // Get the value of "some_key" in eg "https://example.com/?some_key=some_value"
+        var lat = params.lat; // "some_value"
+        var lon = params.lon;
+        // javascript is a garbage language
+        var days = params.days.split(",").map(numStr => parseInt(numStr));
+        name = params.name;
     }
 
     var result = {
@@ -46,6 +58,7 @@ async function extractWeatherFromLocation(place) {
                 let day = days[i];
                 let dayName = daysOfWeek[day];
                 result[dayName] = matchDay(day, data);
+                result[dayName].name = name;
             }
         })
 
@@ -72,7 +85,7 @@ function matchDay(dayOfWeek, myData){
             continue;
         }
 
-        if (time.getHours() === 18) {
+        if (time.getHours() >= 18) {
             return {
                 time: time.toLocaleString('en-US', options),
                 temp: hour.temp,
@@ -160,25 +173,40 @@ function Venue(props) {
             console.log(icon);
         }
 
+        let clouds = "rgba(108, 111, 120, " + props.data.clouds/100 + ")";
+        let rain = "rgba(25, 83, 112, " + props.data.pop + ")";
+
         let src = "https://openweathermap.org/img/wn/" + props.data.weather[0].icon + ".png";
         return (
-            <div className="card m-2">
-                <div className="card-header" style={{backgroundColor: "#555933", color: "white"}}>
-                    <h3>{props.name} <i className={bi}></i></h3>
+            <div className="card mb-2">
+                <div className="card-header" style={
+                    {
+                        backgroundColor: "#3f5c17",
+                        color: "white",
+                    }
+                }>
+                    <h4>{props.name} <i className={bi}></i></h4>
                 </div>
                 <div className="card-body">
-                    <p>
-                        Temperature: {props.data.temp} &deg;F
-                    </p>
-                    <p>
-                        Wind Speed: {props.data.windSpeed} mph <i className={arrow}></i>
-                    </p>
-                    <p>
-                        Cloud Coverage: {props.data.clouds}%
-                    </p>
-                    <p>
-                        Chance of Rain: {props.data.pop * 100}%
-                    </p>
+                    <ul className="list-group">
+                        <li className="list-group-item">
+                            <p className="p m-0"><b>Temperature</b></p>
+                            {props.data.temp.toFixed(0)} &deg;F
+                        </li>
+                        <li className="list-group-item">
+                            <p className="p m-0"><b>Wind</b></p>
+                            {props.data.windSpeed.toFixed(0)} mph <i className={arrow}></i>
+                        </li>
+                        <li className="list-group-item" style={{backgroundColor: clouds}}>
+                            <p className="p m-0"><b>Cloud Cover</b></p>
+                            {props.data.clouds.toFixed(0)}%
+                        </li>
+                        <li className="list-group-item" style={{backgroundColor: rain}}>
+                            <p className="p m-0"><b>Chance of Rain</b></p>
+                            {(props.data.pop * 100).toFixed(0)}%
+                        </li>
+                    </ul>
+
                 </div>
             </div>
         )
@@ -198,11 +226,14 @@ function RaceDay(props) {
         time = props.seatac.time;
     } else if (props.mi){
         time = props.mi.time;
+    } else if (props.custom){
+        time = props.custom.time;
     }
 
     return (
-        <div className="col-md">
+        <div className="col-sm">
             <h3 style={{textAlign: "center"}}>{time}</h3>
+            <Venue data={props.custom} name={props.custom ? props.custom.name : ""} />
             <Venue data={props.velodrome} name="Velodrome"/>
             <Venue data={props.pr} name="Pacific Raceways" />
             <Venue data={props.seward} name="Seward Park" />
@@ -220,6 +251,8 @@ function RaceWeek() {
     const [pr, setPr] = useState([]);
     const [seatac, setSeatac] = useState([]);
     const [mi, setMi] = useState([]);
+
+    const [custom, setCustom] = useState([]);
 
     useEffect(() => {
         async function fetchDataAsync() {
@@ -261,7 +294,23 @@ function RaceWeek() {
         fetchDataAsync();
     }, []);
 
-    console.log(velodrome);
+    useEffect(() => {
+        async function fetchDataAsync() {
+            const json6 = await extractWeatherFromLocation("custom");
+            setCustom(json6);
+        }
+        fetchDataAsync();
+    }, []);
+
+    const [count, setCount] = useState(0);
+    function handleClick() {
+        async function fetchDataAsync() {
+            const json6 = await extractWeatherFromLocation("custom");
+            setCustom(json6);
+        }
+        fetchDataAsync();
+      }
+
     if (velodrome.monday) {
         let now = new Date();
         let nowDay = now.getDay();
@@ -272,10 +321,46 @@ function RaceWeek() {
         }
         return (
             <div className="container-fluid">
+                <div className="offcanvas offcanvas-start" id="demo">
+                    <div className="offcanvas-header">
+                        <h1 className="offcanvas-title">raceweather.bike</h1>
+                        <button type="button" className="btn-close text-reset"
+                                data-bs-dismiss="offcanvas"></button>
+                    </div>
+                    <div className="offcanvas-body">
+                        <p>
+                            This site shows the forecast for all  the Seattle bike racing venues, at the times when races occur.
+                        </p>
+                        <p>
+                            The forecast data is specific to each location and time, so you can plan
+                            your race week without having to check a bunch of different micro-climates
+                            with your usual weather app.
+                        </p>
+                        <p>
+                            You can add one custom location below. Just add your GPS coords (you can get them from google maps)
+                            and give it a name. Then bookmark the page for future use.
+                        </p>
+                        <p>
+                            If I'm missing something here, feel free to drop me a line rrustvold@gmail.com
+                        </p>
+                        <SearchForm callback={handleClick}/>
+                    </div>
+                </div>
+
+                <div className="row">
+                    <div className="col">
+                        <h1>raceweather.bike <button className="btn btn-primary" type="button"
+                                data-bs-toggle="offcanvas" data-bs-target="#demo">
+                            What is this?
+                        </button></h1>
+
+                        <hr></hr>
+                    </div>
+                </div>
                 <div className="row">
                     {
                         next7Days.map(dayName =>
-                            velodrome[dayName] || pr[dayName] || seward[dayName] || seatac[dayName] || mi[dayName]
+                            velodrome[dayName] || pr[dayName] || seward[dayName] || seatac[dayName] || mi[dayName] || custom[dayName]
                             ?
                             <RaceDay
                                 velodrome={velodrome[dayName]}
@@ -283,12 +368,13 @@ function RaceWeek() {
                                 seward={seward[dayName]}
                                 seatac={seatac[dayName]}
                                 mi={mi[dayName]}
+                                custom={custom[dayName]}
                             />
                                 : null
                         )
                     }
                 </div>
-                <div className="container-float m-5">
+                <div className="container-float m-5 pb-3">
                     <p className="text-center text-muted fw-lighter">
                         copyright 2023, rrustvold@gmail.com
                     </p>
@@ -296,6 +382,91 @@ function RaceWeek() {
             </div>
         )
     }
+}
+
+function getLocation() {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const { latitude, longitude } = position.coords;
+        resolve({ latitude, longitude });
+      },
+      error => {
+        reject(error);
+      }
+    );
+  });
+}
+
+function SearchForm(props) {
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+          get: (searchParams, prop) => searchParams.get(prop),
+        });
+  const [customName, setCustomName] = useState(params.name);
+  const [customLat, setCustomLat] = useState(params.lat);
+  const [customLon, setCustomLon] = useState(params.lon);
+
+  const navigate = useNavigate();
+
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    // update the URL with the search term and page
+    navigate(`/?lat=${customLat}&lon=${customLon}&name=${customName}&days=0,1,2,3,4,5,6`);
+    props.callback();
+  };
+
+  function gps() {
+      navigator.geolocation.getCurrentPosition(
+      position => {
+        const { latitude, longitude } = position.coords;
+        setCustomLat(latitude);
+        setCustomLon(longitude);
+      },
+      error => {
+        console.log(error);
+      }
+    );
+  }
+
+  return (
+      <div>
+      <h5>Add a Custom Location</h5>
+    <form onSubmit={handleSubmit}>
+      <label className="form-label">
+        Name
+        <input
+          type="text"
+          value={customName}
+          className="form-control"
+          onChange={(event) => setCustomName(event.target.value)}
+        />
+      </label>
+      <label className="form-label">
+        Latitude
+        <input
+            className="form-control"
+          type="text"
+          value={customLat}
+          onChange={(event) => setCustomLat(event.target.value)}
+        />
+      </label>
+        <label className="form-label">
+        Longitude
+        <input
+            class="form-control"
+          type="text"
+          value={customLon}
+          onChange={(event) => setCustomLon(event.target.value)}
+        />
+      </label>
+        <p><button className="btn btn-secondary" onClick={gps}>Fill with GPS <i
+            className="bi bi-geo-alt"></i></button> </p>
+        <p><button type="submit" className="btn btn-primary">Enter</button></p>
+    </form>
+      </div>
+  );
 }
 
 export default RaceWeek;
