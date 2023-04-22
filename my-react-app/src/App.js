@@ -461,8 +461,8 @@ function SearchForm(props) {
           onChange={(event) => setCustomLon(event.target.value)}
         />
       </label>
-        <p><button className="btn btn-secondary" onClick={gps}>Fill with GPS <i
-            className="bi bi-geo-alt"></i></button> </p>
+        {/*<p><button className="btn btn-secondary" onClick={gps}>Fill with GPS <i*/}
+        {/*    className="bi bi-geo-alt"></i></button> </p>*/}
         <p><button type="submit" className="btn btn-primary">Enter</button></p>
     </form>
       </div>
