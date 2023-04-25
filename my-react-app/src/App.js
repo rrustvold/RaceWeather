@@ -152,6 +152,11 @@ function Venue(props) {
             arrow = "bi bi-arrow-down-right";
         }
 
+        let wind_warning = "";
+        if (props.data.windSpeed >= 15) {
+            wind_warning = "bi bi-exclamation-triangle-fill";
+        }
+
         let icon = props.data.weather[0].icon;
         let bi;
         if (icon === "11d") {
@@ -213,7 +218,7 @@ function Venue(props) {
                         </li>
                         <li className="list-group-item">
                             <p className="p m-0"><b>Wind</b></p>
-                            {props.data.windSpeed.toFixed(0)} mph <i className={arrow}></i>
+                            <i className={wind_warning} style={{color: "red"}}></i> {props.data.windSpeed.toFixed(0)} mph <i className={arrow}></i>
                         </li>
                         <li className="list-group-item" style={{backgroundColor: clouds}}>
                             <p className="p m-0"><b>Cloud Cover</b></p>
