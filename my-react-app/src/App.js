@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+const bmc = (<a href="https://www.buymeacoffee.com/rrustvold" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style={{height: "40px", width: "145px"}} /></a>)
 
 const daysOfWeek = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday"];
 
@@ -77,6 +78,11 @@ function matchDay(dayOfWeek, myData){
         hour: 'numeric',
         hour12: true
     }
+    const options2 = {
+        weekday: 'short',
+        month: 'long',
+        day: 'numeric'
+    }
 
     for (let i in myData.hourly) {
         let hour = myData.hourly[i];
@@ -93,7 +99,9 @@ function matchDay(dayOfWeek, myData){
                 windDirection: hour.wind_deg,
                 pop: hour.pop,
                 weather: hour.weather,
-                clouds: hour.clouds
+                clouds: hour.clouds,
+                evening: false,
+                rain: hour.rain ? hour.rain["1h"] : 0
             };
         }
     }
@@ -105,13 +113,15 @@ function matchDay(dayOfWeek, myData){
 
         if (time.getDay() === dayOfWeek){
             return {
-                time: time.toLocaleString('en-US', options),
+                time: time.toLocaleString('en-US', options2),
                 temp: day.temp.eve,
                 windSpeed: day.wind_speed,
                 windDirection: day.wind_deg,
                 pop: day.pop,
                 weather: day.weather,
-                clouds: day.clouds
+                clouds: day.clouds,
+                evening: true,
+                rain: day.rain ? day.rain : 0
             };
         }
     }
@@ -177,6 +187,14 @@ function Venue(props) {
         let rain = "rgba(25, 83, 112, " + props.data.pop + ")";
 
         let src = "https://openweathermap.org/img/wn/" + props.data.weather[0].icon + ".png";
+        let evening = "";
+        if (props.data.evening) {
+            evening = "(evening)";
+        }
+        let rain_accum = `${props.data.rain} mm/hr`;
+        if (props.data.rain) {
+            rain_accum = `${props.data.rain} mm/hr`;
+        }
         return (
             <div className="card mb-2">
                 <div className="card-header" style={
@@ -191,7 +209,7 @@ function Venue(props) {
                     <ul className="list-group">
                         <li className="list-group-item">
                             <p className="p m-0"><b>Temperature</b></p>
-                            {props.data.temp.toFixed(0)} &deg;F
+                            {props.data.temp.toFixed(0)} &deg;F {evening}
                         </li>
                         <li className="list-group-item">
                             <p className="p m-0"><b>Wind</b></p>
@@ -202,8 +220,8 @@ function Venue(props) {
                             {props.data.clouds.toFixed(0)}%
                         </li>
                         <li className="list-group-item" style={{backgroundColor: rain}}>
-                            <p className="p m-0"><b>Chance of Rain</b></p>
-                            {(props.data.pop * 100).toFixed(0)}%
+                            <p className="p m-0"><b>Rain</b></p>
+                            {(props.data.pop * 100).toFixed(0)}% - {rain_accum}
                         </li>
                     </ul>
 
@@ -376,7 +394,7 @@ function RaceWeek() {
                 </div>
                 <div className="container-float m-5 pb-3">
                     <p className="text-center text-muted fw-lighter">
-                        copyright 2023, rrustvold@gmail.com
+                        copyright 2023, rrustvold@gmail.com {bmc}
                     </p>
                 </div>
             </div>
