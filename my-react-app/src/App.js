@@ -101,7 +101,8 @@ function matchDay(dayOfWeek, myData){
                 weather: hour.weather,
                 clouds: hour.clouds,
                 evening: false,
-                rain: hour.rain ? hour.rain["1h"] : 0
+                rain: hour.rain ? hour.rain["1h"] / (1000*.0254) : 0,
+                rainUnits: "in/hr"
             };
         }
     }
@@ -121,7 +122,8 @@ function matchDay(dayOfWeek, myData){
                 weather: day.weather,
                 clouds: day.clouds,
                 evening: true,
-                rain: day.rain ? day.rain : 0
+                rain: day.rain ? day.rain / (1000*.0254) : 0,
+                rainUnits: "in/day"
             };
         }
     }
@@ -196,9 +198,9 @@ function Venue(props) {
         if (props.data.evening) {
             evening = "(evening)";
         }
-        let rain_accum = `${props.data.rain} mm/hr`;
+        let rain_accum = `${props.data.rain.toFixed(2)} ${props.data.rainUnits}`;
         if (props.data.rain) {
-            rain_accum = `${props.data.rain} mm/hr`;
+            rain_accum = `${props.data.rain.toFixed(2)} ${props.data.rainUnits}`;
         }
         return (
             <div className="card mb-2">
