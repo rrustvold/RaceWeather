@@ -64,8 +64,86 @@ async function extractWeatherFromLocation(place) {
         })
 
         .catch(error => console.error(error));
+
+    const fetchAirUrl = `/air?lat=${lat}&lon=${lon}`;
+    await fetch(fetchAirUrl)
+        .then(response => response.json())
+        .then(data => {
+            for (let i in days) {
+                let day = days[i];
+                let dayName = daysOfWeek[day];
+                result[dayName]["air"] = matchDayForPollution(day, data);
+            }
+        })
+        .catch(error => console.error(error));
     return result
 
+}
+
+
+function calculateAQI(c){
+    c = c.toFixed(2);
+    let c_lo;
+    let c_high;
+    let bp_lo;
+    let bp_high;
+    if (c <= 12){
+        c_lo = 0;
+        c_high = 12;
+        bp_lo = 0;
+        bp_high = 50;
+    } else if (c <= 35.4) {
+        c_lo = 12.1;
+        c_high = 35.4;
+        bp_lo = 51;
+        bp_high = 100;
+    } else if (c <= 55.4) {
+        c_lo = 35.4;
+        c_high = 55.4;
+        bp_lo = 101;
+        bp_high = 150;
+    } else if (c <=150.4) {
+        c_lo = 55.4;
+        c_high = 150.4;
+        bp_lo = 151;
+        bp_high = 200;
+    } else if (c <= 250.4) {
+        c_lo = 150.4;
+        c_high = 250.4;
+        bp_lo = 201;
+        bp_high = 300;
+    } else if (c <= 350.4) {
+        c_lo = 250.4;
+        c_high = 350.4;
+        bp_lo = 301;
+        bp_high = 400;
+    } else if (c <= 500.4) {
+        c_lo = 350.4;
+        c_high = 500.4;
+        bp_lo = 401;
+        bp_high = 500;
+    }
+    return ((bp_high - bp_lo)/(c_high - c_lo) * (c - c_lo) + bp_lo).toFixed(0);
+}
+
+
+function matchDayForPollution(dayOfWeek, myData){
+    for (let i in myData.list) {
+        let hour = myData.list[i];
+        let time = new Date(hour.dt * 1000);
+        if (time.getDay() !== dayOfWeek) {
+            continue;
+        }
+
+        if (time.getHours() >= 18) {
+            return {
+                pm2_5: calculateAQI(hour.components.pm2_5)
+            };
+        }
+    }
+    return {
+        pm2_5: null
+    }
 }
 
 
@@ -73,14 +151,14 @@ function matchDay(dayOfWeek, myData){
 
     const options = {
         weekday: 'short',
-        month: 'long',
+        month: 'numeric',
         day: 'numeric',
         hour: 'numeric',
         hour12: true
     }
     const options2 = {
         weekday: 'short',
-        month: 'long',
+        month: 'numeric',
         day: 'numeric'
     }
 
@@ -162,7 +240,7 @@ function Venue(props) {
         let icon = props.data.weather[0].icon;
         let bi;
         if (icon === "11d") {
-            // thunderstorn
+            // thunderstorm
             bi = "bi bi-cloud-lightning-rain-fill";
         } else if (icon === "09d") {
             // drizzle
@@ -202,26 +280,66 @@ function Venue(props) {
         if (props.data.rain) {
             rain_accum = `${props.data.rain.toFixed(2)} ${props.data.rainUnits}`;
         }
+
+        let pm2_5 = props.data.air.pm2_5;
+        let aqi;
+        let severity;
+        if (pm2_5 === null){
+            severity = null;
+            aqi = "Not Available";
+        }
+        else if (pm2_5 <= 50){
+            severity = "#5b9f49";
+            aqi = " - Good";
+        } else if (pm2_5 <= 100) {
+            severity = "#ffb92f";
+            aqi = " - Moderate";
+        } else if (pm2_5 <= 150) {
+            severity = "#ff8833";
+            aqi = " - Unhealthy for Sensitive Groups";
+        } else if (pm2_5 <= 200) {
+            severity = "#d5202a";
+            aqi = " - Unhealthy";
+        } else if (pm2_5 <= 300) {
+            severity = "#802674";
+            aqi = " - Very Unhealthy";
+        } else if (pm2_5 > 300){
+            severity = "#990008";
+            aqi = " - Hazardous";
+        } else {
+            severity = null;
+            aqi = "Not Available";
+        }
+
         return (
-            <div className="card mb-2">
+            <div className="card mb-4">
                 <div className="card-header" style={
                     {
                         backgroundColor: "#3f5c17",
                         color: "white",
+
                     }
                 }>
                     <h4>{props.name} <i className={bi}></i></h4>
                 </div>
-                <div className="card-body">
+                <div className="card-body m-0 p-0">
                     <ul className="list-group">
                         <li className="list-group-item">
-                            <p className="p m-0"><b>Temperature</b></p>
+                            <p className="p m-0 p-0"><b>Temperature</b></p>
                             {props.data.temp.toFixed(0)} &deg;F {evening}
                         </li>
                         <li className="list-group-item">
                             <p className="p m-0"><b>Wind</b></p>
                             <i className={wind_warning} style={{color: "red"}}></i> {props.data.windSpeed.toFixed(0)} mph <i className={arrow}></i>
                         </li>
+                        {
+                            severity ?
+                            <li className="list-group-item"
+                                style={{backgroundColor: severity}}>
+                                <p className="p m-0"><b>Air Quality (pm 2.5)</b></p>
+                                {props.data.air.pm2_5}{aqi}
+                            </li>
+                        : null}
                         <li className="list-group-item" style={{backgroundColor: clouds}}>
                             <p className="p m-0"><b>Cloud Cover</b></p>
                             {props.data.clouds.toFixed(0)}%
@@ -257,7 +375,7 @@ function RaceDay(props) {
 
     return (
         <div className="col-sm">
-            <h3 style={{textAlign: "center"}}>{time}</h3>
+            <h4 style={{textAlign: "center"}}>{time}</h4>
             <Venue data={props.custom} name={props.custom ? props.custom.name : ""} />
             <Venue data={props.velodrome} name="Velodrome"/>
             <Venue data={props.pr} name="Pacific Raceways" />
@@ -360,6 +478,9 @@ function RaceWeek() {
                             The forecast data is specific to each location and time, so you can plan
                             your race week without having to check a bunch of different micro-climates
                             with your usual weather app.
+                        </p>
+                        <p>
+                            All data is obtained from the <a href="https://openweathermap.org/" target="_blank">Open Weather API</a>.
                         </p>
                         <p>
                             You can add one custom location below. Just add your GPS coords (you can get them from google maps)
