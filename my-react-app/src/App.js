@@ -344,7 +344,10 @@ function Venue(props) {
                             <p className="p m-0"><b>Cloud Cover</b></p>
                             {props.data.clouds.toFixed(0)}%
                         </li>
-                        <li className="list-group-item" style={{backgroundColor: rain}}>
+                        <li className="list-group-item" style={{
+                            backgroundColor: rain,
+                            color: props.data.pop > .75 ? "#EEEEEE" : "black"
+                        }}>
                             <p className="p m-0"><b>Rain</b></p>
                             {(props.data.pop * 100).toFixed(0)}% - {rain_accum}
                         </li>
