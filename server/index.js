@@ -1,10 +1,17 @@
 const path = require("path");
 const express = require("express");
+const http = require('http');
 
 const PORT = process.env.PORT || 3001;
 
 const app = express();
 
+
+setInterval(() => {
+  // Used to keep heroku eco dyno running
+  console.log("Pinging...");
+  http.get("http://www.raceweather.bike");
+}, 28 * 60 * 1000); // every 28 minutes
 
 // Have Node serve the files for our built React app
 app.use(express.static(path.resolve(__dirname, '../my-react-app/build')));
