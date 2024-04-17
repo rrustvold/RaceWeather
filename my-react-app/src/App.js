@@ -7,8 +7,80 @@ const bmc = (<a href="https://www.buymeacoffee.com/rrustvold" target="_blank"><i
 
 const daysOfWeek = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday"];
 
+const schedule = [
+    {
+        name: "Paper Town",
+        lat: 46.17616,
+        lon: -123.091199,
+        date: "2024-04-21",
+        day: 0,
+        timeOfDay: "day"
+    },
+    {
+        name: "TdB - Joe Miller Road Race",
+        lat: 47.39179,
+        lon: -120.29303,
+        date: "2024-05-02",
+        day: 4,
+        timeOfDay: "day"
+    },
+    {
+        name: "TdB - Waterville Road Race",
+        lat: 47.651873,
+        lon: -120.071415,
+        date: "2024-05-03",
+        day: 5,
+        timeOfDay: "day"
+    },
+    {
+        name: "TdB - Palisades Time Trial",
+        lat: 47.298147,
+        lon: -120.060586,
+        date: "2024-05-04",
+        day: 6,
+        timeOfDay: "day"
+    },
+    {
+        name: "TdB - Criterium",
+        lat: 47.426305,
+        lon: -120.311416,
+        date: "2024-05-04",
+        day: 6,
+        timeOfDay: "eve"
+    },
+    {
+        name: "TdB - Plain Road Race",
+        lat: 47.764376,
+        lon: -120.656424,
+        date: "2024-05-05",
+        day: 0,
+        timeOfDay: "morn"
+    },
+
+];
+
+async function getAllOneDays(){
+    let results = [];
+    let now = new Date();
+    let compareDate = new Date().setDate(now.getDate() + 7);
+    for (let i in schedule) {
+        let race = schedule[i];
+        let raceDate = new Date(race.date);
+        if (now < raceDate && raceDate < compareDate) {
+            results.push(
+                {
+                    "name": race.name,
+                    "results": await extractWeatherFromLocation(i)
+                }
+            );
+        }
+    }
+    console.log(results);
+    return results
+}
 async function extractWeatherFromLocation(place) {
     var name;
+    var timeOfDay = "eve";
     if (place === "velodrome") {
         var lat = "47.665724";
         var lon = "-122.112615";
@@ -39,6 +111,13 @@ async function extractWeatherFromLocation(place) {
         // javascript is a garbage language
         var days = params.days.split(",").map(numStr => parseInt(numStr));
         name = params.name;
+    } else if (place !== null){
+        let race = schedule[place];
+        var lat = race.lat;
+        var lon = race.lon;
+        var days = [race.day];
+        name = race.name;
+        timeOfDay = race.timeOfDay;
     }
 
     var result = {
@@ -58,7 +137,7 @@ async function extractWeatherFromLocation(place) {
             for (let i in days){
                 let day = days[i];
                 let dayName = daysOfWeek[day];
-                result[dayName] = matchDay(day, data);
+                result[dayName] = matchDay(day, data, timeOfDay);
                 result[dayName].name = name;
             }
         })
@@ -147,7 +226,7 @@ function matchDayForPollution(dayOfWeek, myData){
 }
 
 
-function matchDay(dayOfWeek, myData){
+function matchDay(dayOfWeek, myData, timeOfDay="eve"){
 
     const options = {
         weekday: 'short',
@@ -162,6 +241,14 @@ function matchDay(dayOfWeek, myData){
         day: 'numeric'
     }
 
+    let timeOfDayMatch = 18;
+    if (timeOfDay === "morn"){
+        timeOfDayMatch = 9;
+    }
+    else if (timeOfDay === "day"){
+        timeOfDayMatch = 13;
+    }
+
     for (let i in myData.hourly) {
         let hour = myData.hourly[i];
         let time = new Date(hour.dt * 1000);
@@ -169,7 +256,7 @@ function matchDay(dayOfWeek, myData){
             continue;
         }
 
-        if (time.getHours() >= 18) {
+        if (time.getHours() >= timeOfDayMatch) {
             return {
                 time: time.toLocaleString('en-US', options),
                 temp: hour.temp,
@@ -179,6 +266,7 @@ function matchDay(dayOfWeek, myData){
                 weather: hour.weather,
                 clouds: hour.clouds,
                 evening: false,
+                timeOfDay: timeOfDay,
                 rain: hour.rain ? hour.rain["1h"] / (1000*.0254) : 0,
                 rainUnits: "in/hr"
             };
@@ -193,13 +281,14 @@ function matchDay(dayOfWeek, myData){
         if (time.getDay() === dayOfWeek){
             return {
                 time: time.toLocaleString('en-US', options2),
-                temp: day.temp.eve,
+                temp: day.temp[timeOfDay],
                 windSpeed: day.wind_speed,
                 windDirection: day.wind_deg,
                 pop: day.pop,
                 weather: day.weather,
                 clouds: day.clouds,
                 evening: true,
+                timeOfDay: timeOfDay,
                 rain: day.rain ? day.rain / (1000*.0254) : 0,
                 rainUnits: "in/day"
             };
@@ -276,6 +365,10 @@ function Venue(props) {
         if (props.data.evening) {
             evening = "(evening)";
         }
+        let timeOfDay = "";
+        if (props.data.timeOfDay){
+            timeOfDay = `(${props.data.timeOfDay})`;
+        }
         let rain_accum = `${props.data.rain.toFixed(2)} ${props.data.rainUnits}`;
         if (props.data.rain) {
             rain_accum = `${props.data.rain.toFixed(2)} ${props.data.rainUnits}`;
@@ -326,7 +419,7 @@ function Venue(props) {
                     <ul className="list-group">
                         <li className="list-group-item">
                             <p className="p m-0 p-0"><b>Temperature</b></p>
-                            {props.data.temp.toFixed(0)} &deg;F {evening}
+                            {props.data.temp.toFixed(0)} &deg;F {timeOfDay}
                         </li>
                         <li className="list-group-item">
                             <p className="p m-0"><b>Wind</b></p>
@@ -362,6 +455,9 @@ function Venue(props) {
 
 function RaceDay(props) {
     let time;
+    let name;
+    let specialRaces = [];
+
     if (props.velodrome){
         time = props.velodrome.time;
     } else if (props.pr){
@@ -375,6 +471,21 @@ function RaceDay(props) {
     } else if (props.custom){
         time = props.custom.time;
     }
+    if (props.oneDay){
+        for (let i in props.oneDay){
+            let venue = props.oneDay[i];
+            let data = venue.results[props.dayName];
+            if (data) {
+                if (!time) {
+                    time = data.time;
+                }
+                specialRaces.push(
+                <Venue data={data} name={venue.name} />
+            );
+            }
+
+        }
+    }
 
     return (
         <div className="col-sm">
@@ -385,6 +496,7 @@ function RaceDay(props) {
             <Venue data={props.seward} name="Seward Park" />
             <Venue data={props.seatac} name="Sea Tac MTB" />
             <Venue data={props.mi} name="Mercer Island Hot Laps" />
+            {specialRaces}
         </div>
     );
 }
@@ -399,6 +511,7 @@ function RaceWeek() {
     const [mi, setMi] = useState([]);
 
     const [custom, setCustom] = useState([]);
+    const [oneDay, setOneDay] = useState([]);
 
     useEffect(() => {
         async function fetchDataAsync() {
@@ -444,6 +557,14 @@ function RaceWeek() {
         async function fetchDataAsync() {
             const json6 = await extractWeatherFromLocation("custom");
             setCustom(json6);
+        }
+        fetchDataAsync();
+    }, []);
+
+    useEffect(() => {
+        async function fetchDataAsync() {
+            const json6 = await getAllOneDays();
+            setOneDay(json6);
         }
         fetchDataAsync();
     }, []);
@@ -509,7 +630,7 @@ function RaceWeek() {
                 <div className="row">
                     {
                         next7Days.map(dayName =>
-                            velodrome[dayName] || pr[dayName] || seward[dayName] || seatac[dayName] || mi[dayName] || custom[dayName]
+                            velodrome[dayName] || pr[dayName] || seward[dayName] || seatac[dayName] || mi[dayName] || custom[dayName] || oneDay.length > 0
                             ?
                             <RaceDay
                                 velodrome={velodrome[dayName]}
@@ -518,6 +639,8 @@ function RaceWeek() {
                                 seatac={seatac[dayName]}
                                 mi={mi[dayName]}
                                 custom={custom[dayName]}
+                                oneDay={oneDay}
+                                dayName={dayName}
                             />
                                 : null
                         )
