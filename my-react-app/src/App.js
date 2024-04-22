@@ -66,7 +66,10 @@ async function getAllOneDays(){
     for (let i in schedule) {
         let race = schedule[i];
         let raceDate = new Date(race.date);
-        if (now < raceDate && raceDate < compareDate) {
+        // Set the race date 1 day in advance so that if we are looking at things the
+        // day of, then it still shows up.
+        raceDate.setDate(raceDate.getDate() + 1);
+        if (now <= raceDate && raceDate < compareDate) {
             results.push(
                 {
                     "name": race.name,
