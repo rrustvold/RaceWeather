@@ -78,7 +78,6 @@ async function getAllOneDays(){
             );
         }
     }
-    console.log(results);
     return results
 }
 async function extractWeatherFromLocation(place) {
@@ -252,6 +251,11 @@ function matchDay(dayOfWeek, myData, timeOfDay="eve"){
         timeOfDayMatch = 13;
     }
 
+    let sunrise = new Date(myData.daily[0].sunrise * 1000);
+    sunrise = sunrise.toLocaleTimeString("en-US");
+    let sunset = new Date(myData.daily[0].sunset * 1000);
+    sunset = sunset.toLocaleTimeString("en-US");
+
     for (let i in myData.hourly) {
         let hour = myData.hourly[i];
         let time = new Date(hour.dt * 1000);
@@ -264,6 +268,7 @@ function matchDay(dayOfWeek, myData, timeOfDay="eve"){
                 time: time.toLocaleString('en-US', options),
                 temp: hour.temp,
                 windSpeed: hour.wind_speed,
+                windGust: hour.wind_gust,
                 windDirection: hour.wind_deg,
                 pop: hour.pop,
                 weather: hour.weather,
@@ -271,7 +276,11 @@ function matchDay(dayOfWeek, myData, timeOfDay="eve"){
                 evening: false,
                 timeOfDay: timeOfDay,
                 rain: hour.rain ? hour.rain["1h"] / (1000*.0254) : 0,
-                rainUnits: "in/hr"
+                rainUnits: "in/hr",
+                sunrise: sunrise,
+                sunset: sunset,
+                uvi: hour.uvi,
+
             };
         }
     }
@@ -286,6 +295,7 @@ function matchDay(dayOfWeek, myData, timeOfDay="eve"){
                 time: time.toLocaleString('en-US', options2),
                 temp: day.temp[timeOfDay],
                 windSpeed: day.wind_speed,
+                windGust: day.wind_gust,
                 windDirection: day.wind_deg,
                 pop: day.pop,
                 weather: day.weather,
@@ -293,7 +303,10 @@ function matchDay(dayOfWeek, myData, timeOfDay="eve"){
                 evening: true,
                 timeOfDay: timeOfDay,
                 rain: day.rain ? day.rain / (1000*.0254) : 0,
-                rainUnits: "in/day"
+                rainUnits: "in/day",
+                sunrise: sunrise,
+                sunset: sunset,
+                uvi: day.uvi
             };
         }
     }
@@ -407,6 +420,33 @@ function Venue(props) {
             aqi = "Not Available";
         }
 
+        let uvi = props.data.uvi;
+        let uvi_color;
+        let uvi_severity;
+        if (uvi === null){
+            uvi_color = null;
+            uvi_severity = "Not Available";
+        }
+        else if (uvi <= 2){
+            uvi_color = "#5b9f49";
+            uvi_severity = " - Low";
+        } else if (uvi <= 5) {
+            uvi_color = "#ffb92f";
+            uvi_severity = " - Moderate";
+        } else if (uvi <= 7) {
+            uvi_color = "#ff8833";
+            uvi_severity = " - High";
+        } else if (uvi <= 11) {
+            uvi_color = "#d5202a";
+            uvi_severity = " - Very High";
+        } else if (uvi > 11) {
+            uvi_color = "#802674";
+            uvi_severity = " - Extreme";
+        } else {
+            uvi_color = null;
+            uvi_severity = "Not Available";
+        }
+
         return (
             <div className="card mb-4">
                 <div className="card-header" style={
@@ -426,17 +466,20 @@ function Venue(props) {
                         </li>
                         <li className="list-group-item">
                             <p className="p m-0"><b>Wind</b></p>
-                            <i className={wind_warning} style={{color: "red"}}></i> {props.data.windSpeed.toFixed(0)} mph <i className={arrow}></i>
+                            <i className={wind_warning}
+                               style={{color: "red"}}></i> {props.data.windSpeed.toFixed(0)} - {props.data.windGust.toFixed(0)} mph <i
+                            className={arrow}></i>
                         </li>
                         {
                             severity ?
-                            <li className="list-group-item"
-                                style={{backgroundColor: severity}}>
-                                <p className="p m-0"><b>Air Quality (pm 2.5)</b></p>
-                                {props.data.air.pm2_5}{aqi}
-                            </li>
-                        : null}
-                        <li className="list-group-item" style={{backgroundColor: clouds}}>
+                                <li className="list-group-item"
+                                    style={{backgroundColor: severity}}>
+                                    <p className="p m-0"><b>Air Quality (pm 2.5)</b></p>
+                                    {props.data.air.pm2_5}{aqi}
+                                </li>
+                                : null}
+                        <li className="list-group-item"
+                            style={{backgroundColor: clouds}}>
                             <p className="p m-0"><b>Cloud Cover</b></p>
                             {props.data.clouds.toFixed(0)}%
                         </li>
@@ -446,6 +489,11 @@ function Venue(props) {
                         }}>
                             <p className="p m-0"><b>Rain</b></p>
                             {(props.data.pop * 100).toFixed(0)}% - {rain_accum}
+                        </li>
+                        <li className="list-group-item"
+                            style={{backgroundColor: uvi_color}}>
+                            <p className="p m-0"><b>UV Index</b></p>
+                            {props.data.uvi.toFixed(0)} {uvi_severity}
                         </li>
                     </ul>
 
@@ -625,8 +673,10 @@ function RaceWeek() {
                         <h1>raceweather.bike <button className="btn btn-primary" type="button"
                                 data-bs-toggle="offcanvas" data-bs-target="#demo">
                             What is this?
-                        </button></h1>
+                        </button>
 
+                        </h1>
+                            Sunrise to Sunset for this week: {velodrome.monday.sunrise} - {velodrome.monday.sunset}
                         <hr></hr>
                     </div>
                 </div>
