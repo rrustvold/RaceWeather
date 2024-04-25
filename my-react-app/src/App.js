@@ -676,7 +676,7 @@ function RaceWeek() {
                         </button>
 
                         </h1>
-                            Sunrise to Sunset for this week: {velodrome.monday.sunrise} - {velodrome.monday.sunset}
+                        ☀️{velodrome.monday.sunrise} - {velodrome.monday.sunset} 🌙
                         <hr></hr>
                     </div>
                 </div>
