@@ -12,7 +12,7 @@ const schedule = [
         name: "Paper Town",
         lat: 46.17616,
         lon: -123.091199,
-        date: "2024-04-21",
+        date: "2024-04-21Z00:00:00-7",
         day: 0,
         timeOfDay: "day"
     },
@@ -20,7 +20,7 @@ const schedule = [
         name: "TdB - Joe Miller Road Race",
         lat: 47.39179,
         lon: -120.29303,
-        date: "2024-05-02",
+        date: "2024-05-02Z00:00:00-7",
         day: 4,
         timeOfDay: "day"
     },
@@ -28,7 +28,7 @@ const schedule = [
         name: "TdB - Waterville Road Race",
         lat: 47.651873,
         lon: -120.071415,
-        date: "2024-05-03",
+        date: "2024-05-03Z00:00:00-7",
         day: 5,
         timeOfDay: "day"
     },
@@ -36,7 +36,7 @@ const schedule = [
         name: "TdB - Palisades Time Trial",
         lat: 47.298147,
         lon: -120.060586,
-        date: "2024-05-04",
+        date: "2024-05-04Z00:00:00-7",
         day: 6,
         timeOfDay: "day"
     },
@@ -44,7 +44,7 @@ const schedule = [
         name: "TdB - Criterium",
         lat: 47.426305,
         lon: -120.311416,
-        date: "2024-05-04",
+        date: "2024-05-04Z00:00:00-7",
         day: 6,
         timeOfDay: "eve"
     },
@@ -52,7 +52,7 @@ const schedule = [
         name: "TdB - Plain Road Race",
         lat: 47.764376,
         lon: -120.656424,
-        date: "2024-05-05",
+        date: "2024-05-05Z00:00:00-7",
         day: 0,
         timeOfDay: "morn"
     },
@@ -62,13 +62,11 @@ const schedule = [
 async function getAllOneDays(){
     let results = [];
     let now = new Date();
-    let compareDate = new Date().setDate(now.getDate() + 7);
+    now.setHours(0, 0, 0, 0);
+    let compareDate = new Date().setDate(now.getDate() + 6);
     for (let i in schedule) {
         let race = schedule[i];
         let raceDate = new Date(race.date);
-        // Set the race date 1 day in advance so that if we are looking at things the
-        // day of, then it still shows up.
-        raceDate.setDate(raceDate.getDate() + 1);
         if (now <= raceDate && raceDate < compareDate) {
             results.push(
                 {
