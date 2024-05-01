@@ -80,11 +80,11 @@ async function getAllOneDays(){
 }
 async function extractWeatherFromLocation(place) {
     var name;
-    var timeOfDay = "eve";
+    var timeOfDay;
     if (place === "velodrome") {
         var lat = "47.665724";
         var lon = "-122.112615";
-        var days = [1, 3, 4, 5];
+        var days = [0, 1, 2, 3, 4, 5, 6];
     } else if (place === "seward") {
         var lat = "47.551464";
         var lon = "-122.253915";
@@ -226,7 +226,7 @@ function matchDayForPollution(dayOfWeek, myData){
 }
 
 
-function matchDay(dayOfWeek, myData, timeOfDay="eve"){
+function matchDay(dayOfWeek, myData, timeOfDay){
 
     const options = {
         weekday: 'short',
@@ -242,6 +242,13 @@ function matchDay(dayOfWeek, myData, timeOfDay="eve"){
     }
 
     let timeOfDayMatch = 18;
+    if (!timeOfDay) {
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            timeOfDay = "day";
+        } else {
+            timeOfDay = "eve";
+        }
+    }
     if (timeOfDay === "morn"){
         timeOfDayMatch = 9;
     }
