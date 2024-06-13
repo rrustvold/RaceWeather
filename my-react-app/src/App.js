@@ -56,6 +56,14 @@ const schedule = [
         day: 0,
         timeOfDay: "morn"
     },
+    {
+        name: "Volunteer Park",
+        lat: 47.630036,
+        lon: -122.314935,
+        date: "2024-06-15Z16:00:00-7",
+        day:6,
+        timeOfDay: "day"
+    }
 
 ];
 
