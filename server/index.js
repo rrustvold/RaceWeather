@@ -11,6 +11,11 @@ setInterval(() => {
   // Used to keep heroku eco dyno running
   console.log("Pinging...");
   http.get("http://weather.leaderboard.bike");
+
+  // keep my other websites alive
+  http.get("http://dm-screen.lasthaven.quest");
+  http.get("http://solo.lasthaven.quest");
+
 }, 28 * 60 * 1000); // every 28 minutes
 
 // Have Node serve the files for our built React app
