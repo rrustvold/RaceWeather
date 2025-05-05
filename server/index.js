@@ -10,7 +10,7 @@ const app = express();
 setInterval(() => {
   // Used to keep heroku eco dyno running
   console.log("Pinging...");
-  http.get("http://www.raceweather.bike");
+  http.get("http://weather.leaderboard.bike");
 }, 28 * 60 * 1000); // every 28 minutes
 
 // Have Node serve the files for our built React app

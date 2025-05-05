@@ -654,7 +654,7 @@ function RaceWeek() {
             <div className="container-fluid">
                 <div className="offcanvas offcanvas-start" id="demo">
                     <div className="offcanvas-header">
-                        <h1 className="offcanvas-title">raceweather.bike</h1>
+                        <h1 className="offcanvas-title">weather.leaderboard.bike</h1>
                         <button type="button" className="btn-close text-reset"
                                 data-bs-dismiss="offcanvas"></button>
                     </div>
@@ -683,7 +683,7 @@ function RaceWeek() {
 
                 <div className="row">
                     <div className="col">
-                        <h1>raceweather.bike <button className="btn btn-primary" type="button"
+                        <h1>weather.leaderboard.bike <button className="btn btn-primary" type="button"
                                 data-bs-toggle="offcanvas" data-bs-target="#demo">
                             What is this?
                         </button>
